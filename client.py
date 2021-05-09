@@ -133,7 +133,7 @@ def main():
 		else:
 			print("wait 30", flush=True)
 			time.sleep(30)
-		ok=check_connect(test_port)
+		ok=check_connect(port)
 		if ok:
 			err_count = 0
 		else:
