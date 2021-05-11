@@ -131,8 +131,8 @@ def main():
 			print("wait 3", flush=True)
 			time.sleep(3)
 		else:
-			print("wait 30", flush=True)
-			time.sleep(30)
+			print("wait 60", flush=True)
+			time.sleep(60)
 		ok=check_connect(port)
 		if ok:
 			err_count = 0
