@@ -36,7 +36,8 @@ def check_connect(port):
 	try:
 		p=subprocess.Popen('curl -s --socks5-hostname 127.0.0.1:' + port + ' www.google.com', shell=True, close_fds=True, preexec_fn = os.setsid)
 		p.wait(3)
-		return True
+		print('returncode', p.returncode)
+		return p.returncode == 0
 	except:
 		os.killpg(p.pid, signal.SIGUSR1)
 		return False
