@@ -118,13 +118,19 @@ def main():
 	time.sleep(3)
 	
 	f=urllib.request.Request(url,headers=headers) 
+	ssr_subscribe = ""
+	ssr_config = []
+	while True:
+		try:
+			ssr_subscribe = urllib.request.urlopen(f).read().decode('utf-8') #获取ssr订阅链接中数据
+			ssr_config = ParseSsr.parse_data(ssr_subscribe)
 
-	ssr_subscribe = urllib.request.urlopen(f).read().decode('utf-8') #获取ssr订阅链接中数据
-	ssr_config = ParseSsr.parse_data(ssr_subscribe)
-
-	if not choose_one_connect(ssr_config, port, test_port):
-		print("can't found some server", flush=True)
-		return
+			if choose_one_connect(ssr_config, port, test_port):
+				break
+			
+		except Exception as e:
+			print(e, flush=True)
+		time.sleep(30)
 
 	err_count = 0
 	while True:
