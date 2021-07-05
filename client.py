@@ -48,14 +48,20 @@ def kill_pid(pid):
 			stdout=subprocess.PIPE,
 			stderr=subprocess.PIPE)
 	else:
-		os.killpg(p.pid, signal.SIGUSR1)
+		os.killpg(pid, signal.SIGUSR1)
 
 def check_connect(port):
 	try:
-		p=new_subprocess('curl.exe -s --socks5-hostname 127.0.0.1:' + port + ' www.google.com')
-		p.wait(5)
-		print('returncode=======>', p.returncode)
-		return p.returncode == 0
+		if(platform.system()=='Windows'):
+			p=new_subprocess('curl.exe -s --socks5-hostname 127.0.0.1:' + port + ' www.google.com')
+			p.wait(5)
+			print('returncode=======>', p.returncode)
+			return p.returncode == 0
+		else:
+			p=new_subprocess('curl -s --socks5-hostname 127.0.0.1:' + port + ' www.google.com')
+			p.wait(5)
+			print('returncode=======>', p.returncode)
+			return p.returncode == 0
 	except Exception as e:
 		print(e, flush=True)
 		kill_pid(p.pid)
