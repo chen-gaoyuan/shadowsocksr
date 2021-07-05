@@ -42,8 +42,11 @@ def new_subprocess(cmd):
 	
 def kill_pid(pid):
 	if(platform.system()=='Windows'):
-		find_kill = 'taskkill -f -pid %s' % pid
-		result = os.popen(find_kill)
+		kill_proc = subprocess.Popen(
+			"TASKKILL /F /PID {pid} /T".format(pid=pid),
+			stdin=subprocess.PIPE,
+			stdout=subprocess.PIPE,
+			stderr=subprocess.PIPE)
 	else:
 		os.killpg(p.pid, signal.SIGUSR1)
 
