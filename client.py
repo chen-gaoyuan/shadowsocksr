@@ -19,6 +19,7 @@ import os
 import time
 import json
 import signal
+import platform
 import subprocess
 import urllib.request
 import ParseSsr #https://www.jianshu.com/p/81b1632bea7f
@@ -32,33 +33,47 @@ try:
 except:
 	print('not found config', flush=True)
 
+def new_subprocess(cmd):
+	print('cmd: ' + cmd)
+	if(platform.system()=='Windows'):
+		return subprocess.Popen(cmd, shell=True, close_fds=True)
+	else:
+		return subprocess.Popen(cmd, shell=True, close_fds=True, preexec_fn = os.setsid)
+	
+def kill_pid(pid):
+	if(platform.system()=='Windows'):
+		find_kill = 'taskkill -f -pid %s' % pid
+		result = os.popen(find_kill)
+	else:
+		os.killpg(p.pid, signal.SIGUSR1)
+
 def check_connect(port):
 	try:
-		p=subprocess.Popen('curl -s --socks5-hostname 127.0.0.1:' + port + ' www.google.com', shell=True, close_fds=True, preexec_fn = os.setsid)
-		p.wait(3)
-		print('returncode', p.returncode)
+		p=new_subprocess('curl.exe -s --socks5-hostname 127.0.0.1:' + port + ' www.google.com')
+		p.wait(5)
+		print('returncode=======>', p.returncode)
 		return p.returncode == 0
-	except:
-		os.killpg(p.pid, signal.SIGUSR1)
+	except Exception as e:
+		print(e, flush=True)
+		kill_pid(p.pid)
 		return False
 
 def ssr_connect_test(ssr, test_port):
-	cmd="python shadowsocks/local.py -qq -s %s -p %s -k %s -m %s -O %s -o %s -b %s " %(ssr['server'],ssr['port'],ssr['password'],ssr['method'],ssr['protocol'],ssr['obfs'],"0.0.0.0")
+	cmd="python2 shadowsocks/local.py -qq -s %s -p %s -k %s -m %s -O %s -o %s -b %s " %(ssr['server'],ssr['port'],ssr['password'],ssr['method'],ssr['protocol'],ssr['obfs'],"0.0.0.0")
 	if(len(ssr.get('protoparam',""))>1):
 		cmd+="-G %s " % ssr['protoparam']
 	if(len(ssr.get('obfsparam',""))>1):
 		cmd+="-g %s " % ssr['obfsparam']
 	# print(cmd)
 
-	p=subprocess.Popen(cmd + " -l " + test_port, shell=True, close_fds=True, preexec_fn = os.setsid)
-	time.sleep(1)
+	p=new_subprocess(cmd + " -l " + test_port)
+	time.sleep(3)
 	start=time.time()
 	ok=check_connect(test_port)
 	end=time.time()
-	os.killpg(p.pid, signal.SIGUSR1)
+	kill_pid(p.pid)
 	if ok:
 		print('found! use time', end - start, flush=True)
-		print(cmd, flush=True)
 		return cmd
 	return None
 
@@ -100,8 +115,8 @@ def choose_one_connect(ssr_config,port,test_port):
 
 		global ssr_process
 		if ssr_process:
-			os.killpg(ssr_process.pid, signal.SIGUSR1)
-		ssr_process=subprocess.Popen(cmd + " -l " + port, shell=True, close_fds=True, preexec_fn = os.setsid)
+			kill_pid(ssr_process.pid)
+		ssr_process=new_subprocess(cmd + " -l " + port)
 		return True
 	
 	return False
@@ -154,4 +169,4 @@ except Exception as e:
 	print(e, flush=True)
 
 if ssr_process:
-	os.killpg(ssr_process.pid, signal.SIGUSR1)
+	kill_pid(ssr_process.pid)
