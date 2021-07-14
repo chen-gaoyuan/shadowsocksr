@@ -37,3 +37,4 @@ usermysql.json
 
 *.log
 ssr-servers.json
+ssr-list.json

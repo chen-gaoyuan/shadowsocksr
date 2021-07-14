@@ -27,10 +27,12 @@ import ParseSsr #https://www.jianshu.com/p/81b1632bea7f
 file_path = 'ssr-servers.json'
 useful_servers = []
 ssr_process = None
-try:	
+if os.path.exists(file_path):
+	print('founded config ' + file_path, flush=True)
 	f = open(file_path, 'r')
 	useful_servers = json.load(f)
-except:
+	f.close()
+else:
 	print('not found config', flush=True)
 
 def new_subprocess(cmd):
@@ -121,6 +123,7 @@ def choose_one_connect(ssr_config,port,test_port):
 			useful_servers.insert(0, s)
 		f = open(file_path, 'w')
 		json.dump(useful_servers, f)
+		f.close()
 
 		global ssr_process
 		if ssr_process:
@@ -138,16 +141,36 @@ def main():
 	ssr_config = []
 	while True:
 		try:
+			print("read client_config.json'", flush=True)
 			f = open('client_config.json', 'r')
 			config = json.load(f)
+			f.close()
 			port=config['port']
 			test_port=config['test_port']
 			url=config['url']
 			headers = {'User-Agent':'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0'}
 
+			print("read ssr-list.json", flush=True)
+			ssr_config = []
+			if os.path.exists("ssr-list.json"):
+				f = open("ssr-list.json", 'r')
+				ssr_config = json.load(f)
+				f.close()
+				
+				if choose_one_connect(ssr_config, port, test_port):
+					break
+
+			
+			print("http srr-list request", flush=True)
+
 			f = urllib.request.Request(url,headers=headers) 
 			ssr_subscribe = urllib.request.urlopen(f).read().decode('utf-8') #获取ssr订阅链接中数据
 			ssr_config = ParseSsr.parse_data(ssr_subscribe)
+
+			print("http srr-list save", flush=True)
+			f = open("ssr-list.json", 'w')
+			json.dump(ssr_config, f)
+			f.close()
 
 			if choose_one_connect(ssr_config, port, test_port):
 				break
